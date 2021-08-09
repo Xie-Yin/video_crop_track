@@ -21,18 +21,39 @@ class VideoTrackWidget extends StatefulWidget {
   final OnSelectDuration? onSelectDuration;
   final TrackWidgetBuilder trackWidgetBuilder;
 
+  ///拖动反馈
+  final Function? dragDown;
+  final Function? dragUpdate;
+  final Function? dragEnd;
+
   ///视频时长s
   final Duration totalDuration;
 
-  ///图片数量
+  ///轨道最大显示 秒
+  final int maxSecond;
+
+  ///最小截取时间 秒
+  final int minSecond;
+
+  ///图片
   final List<String> imgList;
 
-  VideoTrackWidget(
-      {Key? key,
-      this.onSelectDuration,
-      required this.totalDuration,
-      required this.imgList,
-      required this.trackWidgetBuilder});
+  ///图片数量（用于动态加载计算帧图片宽度）
+  final int? imgCount;
+
+  VideoTrackWidget({
+    Key? key,
+    required this.totalDuration,
+    required this.imgList,
+    required this.trackWidgetBuilder,
+    this.imgCount,
+    this.maxSecond = 180,
+    this.minSecond = 3,
+    this.onSelectDuration,
+    this.dragDown,
+    this.dragUpdate,
+    this.dragEnd,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -50,7 +71,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
 
   ///左右两边拖拽元素的位置偏移量
   Offset leftEarOffset = Offset.zero;
-  Offset timelineOffset = Offset.zero;
+  Offset timelineOffset = Offset(-1, 0);
   Offset? rightEarOffset;
 
   bool touchLeft = false;
@@ -59,11 +80,6 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
   ///两个滑块将的最小距离
   late double minInsets;
 
-  ///轨道最大显示180秒
-  int maxSecond = 180;
-
-  ///最小选择的时间 秒
-  int minSelectedSecond = 3;
   late Duration duration;
 
   ///选中的时间
@@ -79,9 +95,9 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
   void initState() {
     super.initState();
 
-    ///最大只能选择180秒，初始默认选择的时间
-    duration = selectEndDur = widget.totalDuration.inSeconds > maxSecond
-        ? Duration(seconds: maxSecond)
+    ///最大只能选择[widget.maxSecond]，初始默认选择的时间
+    duration = selectEndDur = widget.totalDuration.inSeconds > widget.maxSecond
+        ? Duration(seconds: widget.maxSecond)
         : widget.totalDuration;
   }
 
@@ -97,18 +113,19 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
               _initView(constraints);
               return GestureDetector(
                 onHorizontalDragDown: (down) {
-                  _hideTimeline();
-                  _stopAnimation();
                   _onDown(down.localPosition);
+                  widget.dragDown?.call();
                 },
                 onHorizontalDragUpdate: (move) {
                   _onMove(move.delta);
+                  _notificationResult();
+                  widget.dragUpdate?.call();
                 },
                 onHorizontalDragEnd: (up) {
                   touchLeft = false;
                   touchRight = false;
-                  _startTimelineAnimation();
                   _notificationResult();
+                  widget.dragEnd?.call();
                 },
                 child: Stack(
                   children: [
@@ -117,7 +134,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
                       right: earSize.width,
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (notification) =>
-                            notificationListener(notification),
+                            _notificationListener(notification),
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           controller: _scrollController,
@@ -162,51 +179,28 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
       trackSize = Size(viewSize.width - earSize.width * 2, viewSize.height);
       rightEarOffset = Offset(viewSize.width - earSize.width, 0);
       minInsets = _calcMinInsets();
-      _startTimelineAnimation();
     }
   }
 
-  ///计算最小3秒的间隔 宽度是多少
+  ///计算最小[widget.minSecond]秒的间隔 宽度是多少
   double _calcMinInsets() {
-    return trackSize.width / duration.inSeconds * minSelectedSecond;
+    return trackSize.width / duration.inSeconds * widget.minSecond;
   }
 
   ///滚动监听
-  bool notificationListener(ScrollNotification notification) {
+  bool _notificationListener(ScrollNotification notification) {
     if (notification is ScrollEndNotification) {
-      _startTimelineAnimation();
       _notificationResult();
+      widget.dragEnd?.call();
     } else if (notification is ScrollUpdateNotification) {
       _calcSelectDuration();
+      _notificationResult();
+      widget.dragUpdate?.call();
       setState(() {});
+    } else if (notification is ScrollStartNotification) {
+      widget.dragDown?.call();
     }
     return false;
-  }
-
-  ///时间线动画
-  _startTimelineAnimation() {
-    if (_timelineController != null) return;
-    int selectDuration = selectEndDur.inSeconds - selectStartDur.inSeconds;
-    _timelineController = new AnimationController(
-        duration: Duration(seconds: selectDuration), vsync: this);
-    CurvedAnimation curve =
-        CurvedAnimation(parent: _timelineController!, curve: Curves.linear);
-    Animation animation =
-        Tween(begin: leftEarOffset.dx + earSize.width, end: rightEarOffset!.dx)
-            .animate(curve);
-    animation.addListener(() {
-      setState(() {
-        timelineOffset = Offset(animation.value, 0);
-      });
-    });
-    _timelineController?.repeat();
-  }
-
-  ///隐藏时间线
-  _hideTimeline() {
-    setState(() {
-      timelineOffset = Offset(-1, 0);
-    });
   }
 
   _onDown(Offset offset) {
@@ -280,14 +274,15 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
   }
 
   ///视频帧
-  ///轨道最长显示180s，多余的超出显示
+  ///轨道最长显示[widget.maxSecond]，多余的超出显示
   ///动态计算每张图片的宽度
   Widget _getImageChild() {
     double width;
-    if (widget.totalDuration.inSeconds > maxSecond) {
+    int count = widget.imgCount ?? widget.imgList.length;
+    if (widget.totalDuration.inSeconds > widget.maxSecond) {
       width = 48;
     } else {
-      width = trackSize.width / widget.imgList.length;
+      width = trackSize.width / count;
     }
     List<Widget> widgets = [];
     for (int i = 0; i < widget.imgList.length; i++) {
@@ -299,8 +294,36 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
     return Row(children: widgets);
   }
 
+  ///时间线动画
+  startTimelineAnimation({bool reset = false}) {
+    if (_timelineController != null && !reset) return;
+    if (reset) _disposeAnimation();
+    int selectDuration = selectEndDur.inSeconds - selectStartDur.inSeconds;
+    _timelineController = new AnimationController(
+        duration: Duration(seconds: selectDuration), vsync: this);
+    CurvedAnimation curve =
+        CurvedAnimation(parent: _timelineController!, curve: Curves.linear);
+    Animation animation =
+        Tween(begin: leftEarOffset.dx + earSize.width, end: rightEarOffset!.dx)
+            .animate(curve);
+    animation.addListener(() {
+      setState(() {
+        timelineOffset = Offset(animation.value, 0);
+      });
+    });
+    _timelineController?.repeat();
+  }
+
   ///停止时间线动画
-  _stopAnimation() {
+  stopTimelineAnimation() {
+    _timelineController?.stop();
+  }
+
+  continueTimelineAnimation() {
+    _timelineController?.repeat();
+  }
+
+  _disposeAnimation() {
     if (_timelineController == null) return;
     _timelineController?.dispose();
     _timelineController = null;
@@ -308,7 +331,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
 
   @override
   void dispose() {
-    _stopAnimation();
+    _disposeAnimation();
     _scrollController.dispose();
     super.dispose();
   }
