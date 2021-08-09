@@ -117,6 +117,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
                   widget.dragDown?.call();
                 },
                 onHorizontalDragUpdate: (move) {
+                  _hideTimeline();
                   _onMove(move.delta);
                   _notificationResult();
                   widget.dragUpdate?.call();
@@ -193,6 +194,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
       _notificationResult();
       widget.dragEnd?.call();
     } else if (notification is ScrollUpdateNotification) {
+      _hideTimeline();
       _calcSelectDuration();
       _notificationResult();
       widget.dragUpdate?.call();
@@ -321,6 +323,13 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
 
   continueTimelineAnimation() {
     _timelineController?.repeat();
+  }
+
+  _hideTimeline() {
+    _disposeAnimation();
+    setState(() {
+      timelineOffset = Offset(-1, 0);
+    });
   }
 
   _disposeAnimation() {
