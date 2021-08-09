@@ -129,48 +129,54 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _timelineControl(GlobalKey<VideoTrackWidgetState> key) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        MaterialButton(
-          minWidth: 0,
-          child: Text('开始'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () {
-            key.currentState!.startTimelineAnimation();
-          },
+        SizedBox(height: 10),
+        Text('时间线控制'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            MaterialButton(
+              minWidth: 0,
+              child: Text('开始'),
+              color: Colors.blue,
+              textColor: Colors.white,
+              onPressed: () {
+                key.currentState!.startTimelineAnimation();
+              },
+            ),
+            SizedBox(width: 16),
+            MaterialButton(
+              minWidth: 0,
+              child: Text('暂停'),
+              color: Colors.blue,
+              textColor: Colors.white,
+              onPressed: () {
+                key.currentState!.stopTimelineAnimation();
+              },
+            ),
+            SizedBox(width: 16),
+            MaterialButton(
+              minWidth: 0,
+              child: Text('继续'),
+              color: Colors.blue,
+              textColor: Colors.white,
+              onPressed: () {
+                key.currentState!.continueTimelineAnimation();
+              },
+            ),
+            SizedBox(width: 16),
+            MaterialButton(
+              minWidth: 0,
+              child: Text('重新开始'),
+              color: Colors.blue,
+              textColor: Colors.white,
+              onPressed: () {
+                key.currentState!.startTimelineAnimation(reset: true);
+              },
+            )
+          ],
         ),
-        SizedBox(width: 16),
-        MaterialButton(
-          minWidth: 0,
-          child: Text('暂停'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () {
-            key.currentState!.stopTimelineAnimation();
-          },
-        ),
-        SizedBox(width: 16),
-        MaterialButton(
-          minWidth: 0,
-          child: Text('继续'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () {
-            key.currentState!.continueTimelineAnimation();
-          },
-        ),
-        SizedBox(width: 16),
-        MaterialButton(
-          minWidth: 0,
-          child: Text('重新开始'),
-          color: Colors.blue,
-          textColor: Colors.white,
-          onPressed: () {
-            key.currentState!.startTimelineAnimation(reset: true);
-          },
-        )
       ],
     );
   }
