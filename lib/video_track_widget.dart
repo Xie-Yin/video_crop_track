@@ -300,9 +300,10 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
   startTimelineAnimation({bool reset = false}) {
     if (_timelineController != null && !reset) return;
     if (reset) _disposeAnimation();
-    int selectDuration = selectEndDur.inSeconds - selectStartDur.inSeconds;
+    int selectDuration =
+        selectEndDur.inMilliseconds - selectStartDur.inMilliseconds;
     _timelineController = new AnimationController(
-        duration: Duration(seconds: selectDuration), vsync: this);
+        duration: Duration(milliseconds: selectDuration), vsync: this);
     CurvedAnimation curve =
         CurvedAnimation(parent: _timelineController!, curve: Curves.linear);
     Animation animation =
