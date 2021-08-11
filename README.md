@@ -1,5 +1,5 @@
 ### 一个Flutter视频裁剪编辑的轨道UI交互效果
-
+### [Flutter视频编辑轨道 | 自定义View实现UI交互效果 | 触摸事件处理](https://blog.csdn.net/a_zhon/article/details/119546032)
 ### 效果图展示
 <img src="https://github.com/Xie-Yin/video_crop_track/blob/main/gif/screen_1.gif" width="300"/>  <img src="https://github.com/Xie-Yin/video_crop_track/blob/main/gif/screen_2.gif" width="300"/>
 
