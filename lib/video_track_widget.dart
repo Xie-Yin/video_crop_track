@@ -10,6 +10,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:video_crop_track/track_style.dart';
 import 'package:video_crop_track/track_custom_paint.dart';
 import 'package:video_crop_track/video_track_painter.dart';
 
@@ -20,12 +21,6 @@ typedef TrackWidgetBuilder = Widget Function(
 class VideoTrackWidget extends StatefulWidget {
   final OnSelectDuration? onSelectDuration;
   final TrackWidgetBuilder trackWidgetBuilder;
-
-  ///轨道高度
-  final double trackHeight;
-
-  ///帧图片宽度
-  final double imgWidth;
 
   ///拖动事件反馈
   final Function? dragDown;
@@ -47,8 +42,8 @@ class VideoTrackWidget extends StatefulWidget {
   ///图片数量（用于动态加载计算帧图片宽度）
   final int? imgCount;
 
-  ///拖拽耳朵的大小
-  final Size earSize;
+  ///轨道样式
+  final TrackStyle style;
 
   VideoTrackWidget({
     Key? key,
@@ -60,11 +55,9 @@ class VideoTrackWidget extends StatefulWidget {
     this.dragDown,
     this.dragUpdate,
     this.dragEnd,
-    this.trackHeight = 48,
-    this.imgWidth = 48,
     this.maxSecond = 180,
     this.minSecond = 3,
-    this.earSize = const Size(20, 48),
+    this.style = const TrackStyle(),
   }) : super(key: key);
 
   @override
@@ -104,7 +97,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
   @override
   void initState() {
     super.initState();
-    earSize = widget.earSize;
+    earSize = widget.style.earSize;
 
     ///最大只能选择[widget.maxSecond]，初始默认选择的时间
     duration = selectEndDur = widget.totalDuration.inSeconds > widget.maxSecond
@@ -115,7 +108,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: widget.trackHeight,
+      height: widget.style.trackHeight,
       width: double.infinity,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -158,7 +151,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
                     leftEarOffset: leftEarOffset,
                     rightEarOffset: rightEarOffset!,
                     timelineOffset: timelineOffset,
-                    earSize: earSize,
+                    style: widget.style,
                   ),
                 ),
               ],
@@ -283,7 +276,7 @@ class VideoTrackWidgetState extends State<VideoTrackWidget>
     double width;
     int count = widget.imgCount ?? widget.imgList.length;
     if (widget.totalDuration.inSeconds > widget.maxSecond) {
-      width = widget.imgWidth;
+      width = widget.style.imgWidth;
     } else {
       width = trackSize.width / count;
     }

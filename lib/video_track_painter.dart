@@ -8,36 +8,47 @@
  * @author   阿钟
  */
 import 'package:flutter/material.dart';
+import 'package:video_crop_track/track_style.dart';
 
 class VideoTrackPainter extends CustomPainter {
-  Size earWhiteSize = Size(4, 12);
-  Paint earPaint = Paint();
-  Paint rectPaint = Paint()
-    ..color = Color(0xFFFF443D)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 2;
-  Paint maskPaint = Paint()
-    ..color = Colors.black.withOpacity(0.6)
-    ..style = PaintingStyle.fill;
-  Paint timelinePaint = Paint()
-    ..color = Color(0xFFFF443D)
-    ..style = PaintingStyle.fill
-    ..strokeWidth = 2;
+  late Paint earPaint;
+  late Paint rectPaint;
+  late Paint maskPaint;
+  late Paint timelinePaint;
+  late Size earSize;
 
   ///耳朵的位置
-  Size earSize;
-  Offset leftEarOffset;
-  Offset rightEarOffset;
+  final Offset leftEarOffset;
+  final Offset rightEarOffset;
 
   ///时间线偏移
-  Offset timelineOffset;
+  final Offset timelineOffset;
+  final TrackStyle style;
 
   VideoTrackPainter({
     required this.leftEarOffset,
-    required this.earSize,
     required this.rightEarOffset,
     required this.timelineOffset,
-  });
+    required this.style,
+  }) {
+    _init();
+  }
+
+  void _init() {
+    earSize = style.earSize;
+    earPaint = Paint();
+    rectPaint = Paint()
+      ..color = style.trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    maskPaint = Paint()
+      ..color = style.maskColor
+      ..style = PaintingStyle.fill;
+    timelinePaint = Paint()
+      ..color = style.trackColor
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 2;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -72,15 +83,15 @@ class VideoTrackPainter extends CustomPainter {
       topRight: leftCorner ? Radius.zero : radius,
       bottomRight: leftCorner ? Radius.zero : radius,
     );
-    earPaint.color = Color(0xFFFF443D);
+    earPaint.color = style.trackColor;
     canvas.drawRRect(rRect, earPaint);
 
     ///白色矩形
     Rect whiteRect = Rect.fromCenter(
         center: Offset(offset.dx + rect.width / 2, offset.dy + rect.height / 2),
-        width: earWhiteSize.width,
-        height: earWhiteSize.height);
-    earPaint.color = Colors.white;
+        width: style.earRectSize.width,
+        height: style.earRectSize.height);
+    earPaint.color = style.earRectColor;
     RRect whiteRRect = RRect.fromRectAndRadius(whiteRect, Radius.circular(4));
     canvas.drawRRect(whiteRRect, earPaint);
   }
