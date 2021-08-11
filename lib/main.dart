@@ -78,7 +78,9 @@ class _MyHomePageState extends State<MyHomePage> {
               key: key1,
               imgList: list,
               totalDuration: duration,
-              onSelectDuration: (start, end) {},
+              onSelectDuration: (start, end) {
+                print('轨道1选择的时间段：$start ~ $end');
+              },
               trackWidgetBuilder:
                   (BuildContext context, String data, Size size) {
                 return Container(
@@ -105,7 +107,9 @@ class _MyHomePageState extends State<MyHomePage> {
               key: key2,
               imgList: list2,
               totalDuration: duration2,
-              onSelectDuration: (start, end) {},
+              onSelectDuration: (start, end) {
+                print('轨道2选择的时间段：$start ~ $end');
+              },
               trackWidgetBuilder:
                   (BuildContext context, String data, Size size) {
                 return Container(
